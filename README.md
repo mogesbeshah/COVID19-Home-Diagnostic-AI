@@ -61,11 +61,20 @@ The network estimates:
 
 P(PCR Positive | Home Evidence)
 
-Bayesian inference is used to compare estimated PCR-positive probability with and without at-home COVID-19 test information.
+Bayesian inference is used to examine probabilistic relationships among the selected home-available predictors and PCR test results.
 
 ## Streamlit Application
 
-A Streamlit application will provide an interactive interface where users can enter home-available information and receive an estimated probability of PCR-positive COVID-19.
+A Streamlit application provides an interactive interface where users can enter home-available information and receive an estimated probability of PCR-positive COVID-19.
+
+The application uses the fitted LASSO models to compare:
+
+- Model A — Home information only
+- Model B — Home information + at-home COVID-19 test
+
+### Live Application
+
+[Open the COVID-19 Home Diagnostic AI](https://covid19-home-diagnostic-ai.streamlit.app/)
 
 ## Repository Structure
 
@@ -86,6 +95,34 @@ COVID19-Home-Diagnostic-AI/
     └── COVID19_Home_Diagnostic_AI.ipynb
 ```
 
+## Running the Project
+
+### Install Required Packages
+
+From the repository root:
+
+```bash
+pip install -r requirements.txt
+```
+
+### Run the Jupyter Notebook
+
+Open:
+
+```text
+notebooks/COVID19_Home_Diagnostic_AI.ipynb
+```
+
+Run all cells from top to bottom. The notebook contains the complete analysis, model comparison, LASSO feature selection, DAG construction, Bayesian network, and probabilistic inference.
+
+### Run the Streamlit Application
+
+From the repository root:
+
+```bash
+streamlit run app.py
+```
+
 ## Main Python Libraries
 
 - pandas
@@ -95,7 +132,8 @@ COVID19-Home-Diagnostic-AI/
 - NetworkX
 - pgmpy
 - Streamlit
+- Jupyter
 
-##Important Note
+## Important Note
 
 This system is a predictive AI prototype based on the COVIDCARE dataset. It is intended for academic and research purposes and should not be used as a substitute for professional medical diagnosis or clinical testing.
