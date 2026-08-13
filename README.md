@@ -87,6 +87,7 @@ COVID19-Home-Diagnostic-AI/
 ```
 
 ##Main Python Libraries
+
 pandas
 NumPy
 scikit-learn
