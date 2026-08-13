@@ -12,7 +12,6 @@ import re
 import numpy as np
 import pandas as pd
 import streamlit as st
-import networkx as nx
 
 from sklearn.base import clone
 from sklearn.compose import ColumnTransformer
@@ -20,10 +19,6 @@ from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.pipeline import Pipeline
 from sklearn.linear_model import LogisticRegressionCV
-
-from pgmpy.models import DiscreteBayesianNetwork
-from pgmpy.estimators import BayesianEstimator
-from pgmpy.inference import VariableElimination
 
 
 # ============================================================
@@ -33,20 +28,22 @@ from pgmpy.inference import VariableElimination
 st.set_page_config(
     page_title="COVID-19 Home Diagnostic AI",
     page_icon="🩺",
-    layout="wide"
+    layout="centered"
 )
 
 RANDOM_STATE = 42
+
 TARGET = "PCR Test Positive"
+
 HOME_TEST_VAR = "HOME_TEST_RESULT_PRE_PCR"
 
 
 # ============================================================
-# LOAD AND BUILD MODEL
+# BUILD PREDICTIVE MODELS
 # ============================================================
 
 @st.cache_resource
-def build_covid_model():
+def build_models():
 
     # --------------------------------------------------------
     # 1. Load data
@@ -64,14 +61,8 @@ def build_covid_model():
         "COVIDCARE_survey_dictionary_v2_ForSubmission_MIT_Phase_II_2021-12-26.csv"
     )
 
-    kb = pd.read_csv(
-        DATA_DIR /
-        "COVIDCARE_DEMI_knowledgebase_v4.csv"
-    )
-
     df.columns = df.columns.str.strip()
     dictionary.columns = dictionary.columns.str.strip()
-    kb.columns = kb.columns.str.strip()
 
 
     # --------------------------------------------------------
@@ -89,6 +80,7 @@ def build_covid_model():
         .set_index("Variable Name")
         .to_dict("index")
     )
+
 
     def dict_value(var, field, default=""):
 
@@ -141,13 +133,32 @@ def build_covid_model():
 
 
     # --------------------------------------------------------
-    # 3. Short descriptions
+    # 3. Display labels
     # --------------------------------------------------------
+
+    LABEL_OVERRIDES = {
+
+        HOME_TEST_VAR:
+            "At-home COVID test",
+
+        "30158-Symtpom_Neuro-8":
+            "Loss of taste",
+
+        "30158-Symtpom_Neuro-7":
+            "Loss of smell",
+
+        "30166-Prev_exposure-1":
+            "Recent COVID exposure",
+
+        "32136-vaccine_didyou":
+            "Vaccination status"
+    }
+
 
     def short_description(var):
 
-        if var == HOME_TEST_VAR:
-            return "At-home COVID test result"
+        if var in LABEL_OVERRIDES:
+            return LABEL_OVERRIDES[var]
 
         desc = description_of(var)
         prompt = prompt_of(var)
@@ -156,22 +167,14 @@ def build_covid_model():
 
         if "?" in text:
 
-            specific = (
-                text
-                .split("?")[-1]
-                .strip()
-            )
+            specific = text.split("?")[-1].strip()
 
             if specific:
                 return specific
 
         if ";" in text:
 
-            specific = (
-                text
-                .split(";")[-1]
-                .strip()
-            )
+            specific = text.split(";")[-1].strip()
 
             if specific:
                 return specific
@@ -179,51 +182,8 @@ def build_covid_model():
         return desc
 
 
-    # Cleaner display labels
-    LABEL_OVERRIDES = {
-
-        "HOME_TEST_RESULT_PRE_PCR":
-            "At-home COVID test",
-
-        "30075-Other_household":
-            "Number of household members",
-
-        "30166-Prev_exposure-1":
-            "Recent COVID exposure",
-
-        "30103-conditionsrisks-13":
-            "Mental health condition",
-
-        "32136-vaccine_didyou":
-            "Vaccination status",
-
-        "32137-vaccine_avail":
-            "Likelihood to receive vaccine",
-
-        "30101-ace_medication":
-            "ACE medication",
-
-        "30158-Symtpom_Neuro-7":
-            "Loss of smell",
-
-        "30158-Symtpom_Neuro-8":
-            "Loss of taste",
-
-        "30172-COVID_vaccine_type":
-            "COVID vaccine type"
-    }
-
-
-    def display_name(var):
-
-        if var in LABEL_OVERRIDES:
-            return LABEL_OVERRIDES[var]
-
-        return short_description(var)
-
-
     # --------------------------------------------------------
-    # 4. Classify home-available variables
+    # 4. Identify home-available variables
     # --------------------------------------------------------
 
     POST_VISIT_FORMS = {
@@ -241,7 +201,9 @@ def build_covid_model():
 
 
     PRIMARY_HOME_FORMS = {
+
         "About You",
+
         "Symptom Screening"
     }
 
@@ -254,10 +216,15 @@ def build_covid_model():
     PRIOR_TEST_PATTERNS = [
 
         r"covid_result",
+
         r"covid_tested",
+
         r"covid_tst",
+
         r"covid_why",
+
         r"test_specify",
+
         r"test_date"
     ]
 
@@ -265,13 +232,21 @@ def build_covid_model():
     ADMIN_PATTERNS = [
 
         r"submission",
+
         r"confirmation",
+
         r"internal.?id",
+
         r"_deid$",
+
         r"email",
+
         r"phone",
+
         r"address",
+
         r"shipping",
+
         r"cohort"
     ]
 
@@ -293,6 +268,7 @@ def build_covid_model():
     def classify_variable(var):
 
         form = form_of(var)
+
         dtype = datatype_of(var)
 
         combined = (
@@ -389,8 +365,11 @@ def build_covid_model():
             lab_terms = [
 
                 "lab-administered",
+
                 "pcr test",
+
                 "antigen test",
+
                 "antibody test"
             ]
 
@@ -420,15 +399,15 @@ def build_covid_model():
 
     classification_rows = []
 
+
     for var in df.columns:
 
-        status, use = (
-            classify_variable(var)
-        )
+        status, use = classify_variable(var)
 
         classification_rows.append({
 
-            "Variable": var,
+            "Variable":
+                var,
 
             "Home_Classification":
                 status,
@@ -444,12 +423,13 @@ def build_covid_model():
 
 
     # --------------------------------------------------------
-    # 5. Derive home-test result
+    # 5. Create home-test variable
     # --------------------------------------------------------
 
     HOME_TEST_SPECS = [
 
         {
+
             "date":
                 "32007-datestart_DEID",
 
@@ -464,6 +444,7 @@ def build_covid_model():
         },
 
         {
+
             "date":
                 "32320-datestart_2_DEID",
 
@@ -507,6 +488,7 @@ def build_covid_model():
                 and
                 home_date > pcr_date
             ):
+
                 continue
 
 
@@ -546,13 +528,19 @@ def build_covid_model():
 
 
         if "Positive" in statuses:
+
             return "Positive"
 
+
         if "Negative" in statuses:
+
             return "Negative"
 
+
         if "Invalid" in statuses:
+
             return "Invalid"
+
 
         return "Unknown"
 
@@ -564,7 +552,7 @@ def build_covid_model():
 
 
     # --------------------------------------------------------
-    # 6. Model B dataset
+    # 6. PCR-known analysis population
     # --------------------------------------------------------
 
     analysis_df = df[
@@ -579,12 +567,16 @@ def build_covid_model():
 
 
     primary_features = (
+
         classification.loc[
+
             classification[
                 "Primary_Model_Use"
             ],
+
             "Variable"
         ]
+
         .tolist()
     )
 
@@ -593,12 +585,15 @@ def build_covid_model():
 
         feature
 
-        for feature
-        in primary_features
+        for feature in primary_features
 
         if feature != TARGET
     ]
 
+
+    # --------------------------------------------------------
+    # 7. Remove unusable predictors
+    # --------------------------------------------------------
 
     def remove_unusable(
         data,
@@ -608,9 +603,11 @@ def build_covid_model():
 
         keep = []
 
+
         for column in columns:
 
             if column not in data.columns:
+
                 continue
 
 
@@ -635,7 +632,9 @@ def build_covid_model():
                 unique_values > 1
             ):
 
-                keep.append(column)
+                keep.append(
+                    column
+                )
 
 
         return keep
@@ -643,6 +642,15 @@ def build_covid_model():
 
     primary_features = remove_unusable(
         analysis_df,
+        primary_features
+    )
+
+
+    # --------------------------------------------------------
+    # 8. Model A and Model B
+    # --------------------------------------------------------
+
+    MODEL_A_FEATURES = (
         primary_features
     )
 
@@ -655,7 +663,7 @@ def build_covid_model():
 
 
     # --------------------------------------------------------
-    # 7. LASSO preprocessing
+    # 9. Infer feature types
     # --------------------------------------------------------
 
     def infer_feature_types(
@@ -664,6 +672,7 @@ def build_covid_model():
     ):
 
         categorical = []
+
         numeric = []
 
 
@@ -671,7 +680,9 @@ def build_covid_model():
 
             if column == HOME_TEST_VAR:
 
-                categorical.append(column)
+                categorical.append(
+                    column
+                )
 
                 continue
 
@@ -728,6 +739,10 @@ def build_covid_model():
         return categorical, numeric
 
 
+    # --------------------------------------------------------
+    # 10. Preprocessor
+    # --------------------------------------------------------
+
     def make_preprocessor(
         data,
         features
@@ -744,19 +759,23 @@ def build_covid_model():
         cat_pipe = Pipeline([
 
             (
+
                 "imputer",
 
                 SimpleImputer(
                     strategy="most_frequent"
                 )
+
             ),
 
             (
+
                 "onehot",
 
                 OneHotEncoder(
                     handle_unknown="ignore"
                 )
+
             )
         ])
 
@@ -764,17 +783,21 @@ def build_covid_model():
         num_pipe = Pipeline([
 
             (
+
                 "imputer",
 
                 SimpleImputer(
                     strategy="median"
                 )
+
             ),
 
             (
+
                 "scaler",
 
                 StandardScaler()
+
             )
         ])
 
@@ -782,98 +805,136 @@ def build_covid_model():
         return ColumnTransformer([
 
             (
+
                 "cat",
+
                 cat_pipe,
+
                 categorical
+
             ),
 
             (
+
                 "num",
+
                 num_pipe,
+
                 numeric
+
             )
         ])
 
 
     # --------------------------------------------------------
-    # 8. Fit LASSO Model B
+    # 11. Fit LASSO function
     # --------------------------------------------------------
 
-    X = analysis_df[
-        MODEL_B_FEATURES
-    ].copy()
+    def fit_lasso(features):
 
-    y = analysis_df[
-        TARGET
-    ].astype(int)
+        X = analysis_df[
+            features
+        ].copy()
 
 
-    prep = make_preprocessor(
-        analysis_df,
-        MODEL_B_FEATURES
-    )
+        y = analysis_df[
+            TARGET
+        ].astype(int)
 
 
-    lasso_model = Pipeline([
-
-        (
-            "prep",
-            clone(prep)
-        ),
-
-        (
-            "model",
-
-            LogisticRegressionCV(
-
-                Cs=10,
-
-                cv=5,
-
-                penalty="l1",
-
-                solver="saga",
-
-                scoring="roc_auc",
-
-                class_weight="balanced",
-
-                max_iter=10000,
-
-                n_jobs=-1,
-
-                random_state=RANDOM_STATE
-            )
+        prep = make_preprocessor(
+            analysis_df,
+            features
         )
-    ])
 
 
-    lasso_model.fit(
-        X,
-        y
+        model = Pipeline([
+
+            (
+
+                "prep",
+
+                clone(prep)
+
+            ),
+
+            (
+
+                "model",
+
+                LogisticRegressionCV(
+
+                    Cs=10,
+
+                    cv=5,
+
+                    penalty="l1",
+
+                    solver="saga",
+
+                    scoring="roc_auc",
+
+                    class_weight="balanced",
+
+                    max_iter=10000,
+
+                    n_jobs=-1,
+
+                    random_state=RANDOM_STATE
+
+                )
+
+            )
+        ])
+
+
+        model.fit(
+            X,
+            y
+        )
+
+
+        return model
+
+
+    # --------------------------------------------------------
+    # 12. Fit Model A and Model B
+    # --------------------------------------------------------
+
+    lasso_A = fit_lasso(
+        MODEL_A_FEATURES
     )
 
 
-    prep_fitted = (
-        lasso_model
+    lasso_B = fit_lasso(
+        MODEL_B_FEATURES
+    )
+
+
+    # --------------------------------------------------------
+    # 13. Model B LASSO importance
+    # --------------------------------------------------------
+
+    prep_B = (
+        lasso_B
         .named_steps["prep"]
     )
 
 
-    fitted_lasso = (
-        lasso_model
+    fitted_B = (
+        lasso_B
         .named_steps["model"]
     )
 
 
     encoded_names = (
-        prep_fitted
+        prep_B
         .get_feature_names_out()
     )
 
 
     coefficients = (
-        fitted_lasso
+        fitted_B
         .coef_[0]
     )
 
@@ -901,11 +962,13 @@ def build_covid_model():
         ):
 
             originals.append(
+
                 encoded_name.replace(
                     "num__",
                     "",
                     1
                 )
+
             )
 
             continue
@@ -940,7 +1003,9 @@ def build_covid_model():
                 break
 
 
-        originals.append(match)
+        originals.append(
+            match
+        )
 
 
     encoded["Variable"] = originals
@@ -954,17 +1019,21 @@ def build_covid_model():
     importance_B = (
 
         encoded
+
         .groupby(
             "Variable",
             as_index=False
         )
+
         .agg(
 
             LASSO_Importance=(
                 "Abs_Coefficient",
                 "sum"
             )
+
         )
+
         .sort_values(
             "LASSO_Importance",
             ascending=False
@@ -973,741 +1042,378 @@ def build_covid_model():
 
 
     # --------------------------------------------------------
-    # 9. Select top 10 Model B predictors
+    # 14. Five interpretable Streamlit inputs
     # --------------------------------------------------------
 
-    TOP_N_BN = 10
+    APP_FEATURES = [
+
+        HOME_TEST_VAR,
+
+        "30158-Symtpom_Neuro-8",   # Loss of taste
+
+        "30158-Symtpom_Neuro-7",   # Loss of smell
+
+        "30166-Prev_exposure-1",    # Recent exposure
+
+        "32136-vaccine_didyou"      # Vaccination
+    ]
 
 
-    bn_candidates = importance_B[
+    APP_FEATURES = [
 
-        (
-            importance_B[
-                "LASSO_Importance"
-            ] > 0
-        )
-
-        &
-
-        (
-            importance_B[
-                "Variable"
-            ].isin(
-                MODEL_B_FEATURES
-            )
-        )
-
-    ].copy()
-
-
-    BN_FEATURES = (
-
-        bn_candidates
-        .head(TOP_N_BN)[
-            "Variable"
-        ]
-        .tolist()
-    )
-
-
-    # --------------------------------------------------------
-    # 10. Discretize Bayesian variables
-    # --------------------------------------------------------
-
-    def discretize_for_bn(
-        series,
         variable
-    ):
 
-        s = series.copy()
-
-        dtype = (
-            datatype_of(variable)
-            .lower()
-        )
-
-        nonmissing = (
-            s.dropna()
-        )
-
+        for variable in APP_FEATURES
 
         if (
-            "categor" in dtype
+            variable in analysis_df.columns
             or
-            "ordinal" in dtype
-            or
-            nonmissing.nunique() <= 8
-        ):
-
-            return (
-                s
-                .fillna("Unknown")
-                .astype(str)
-            )
-
-
-        numeric = pd.to_numeric(
-            s,
-            errors="coerce"
+            variable == HOME_TEST_VAR
         )
+    ]
 
 
-        if (
-            numeric
-            .dropna()
-            .nunique()
-            >= 3
-        ):
+    # --------------------------------------------------------
+    # 15. Observed states for Streamlit inputs
+    # --------------------------------------------------------
 
-            try:
-
-                binned = pd.qcut(
-
-                    numeric,
-
-                    q=3,
-
-                    labels=[
-                        "Low",
-                        "Medium",
-                        "High"
-                    ],
-
-                    duplicates="drop"
-                )
+    observed_states = {}
 
 
-                return (
-                    binned
-                    .astype(object)
-                    .where(
-                        binned.notna(),
-                        "Unknown"
-                    )
-                    .astype(str)
-                )
+    for variable in APP_FEATURES:
 
+        values = (
 
-            except Exception:
-
-                pass
-
-
-        return (
-
-            numeric
-            .fillna(
-                numeric.median()
-            )
-            .round(0)
-            .astype(str)
-        )
-
-
-    bn_data = pd.DataFrame(
-        index=analysis_df.index
-    )
-
-
-    for variable in BN_FEATURES:
-
-        bn_data[variable] = (
-            discretize_for_bn(
-                analysis_df[variable],
+            analysis_df[
                 variable
-            )
-        )
-
-
-    bn_data[TARGET] = (
-
-        analysis_df[TARGET]
-        .astype(int)
-        .astype(str)
-    )
-
-
-    # --------------------------------------------------------
-    # 11. DEMI temporal relationships
-    # --------------------------------------------------------
-
-    def demi_candidate_edges(
-        selected_features,
-        kb_df
-    ):
-
-        selected = set(
-            selected_features
-        )
-
-
-        temp = kb_df[
-
-            kb_df[
-                "concept_code"
-            ].isin(selected)
-
-            &
-
-            kb_df[
-                "target_concept_code"
-            ].isin(selected)
-
-            &
-
-            (
-                kb_df[
-                    "concept_code"
-                ]
-                !=
-                kb_df[
-                    "target_concept_code"
-                ]
-            )
-
-        ].copy()
-
-
-        if temp.empty:
-
-            return pd.DataFrame(
-
-                columns=[
-
-                    "source",
-                    "target",
-                    "temporal_strength",
-                    "association_strength"
-                ]
-            )
-
-
-        n11 = (
-            temp["n_code_target"]
-            .astype(float)
-        )
-
-        n10 = (
-            temp["n_code_no_target"]
-            .astype(float)
-        )
-
-        n01 = (
-            temp["n_target_no_code"]
-            .astype(float)
-        )
-
-        n00 = (
-            temp["n_no_code_no_target"]
-            .astype(float)
-        )
-
-
-        numerator = (
-            n11 * n00
-            -
-            n10 * n01
-        )
-
-
-        denominator = np.sqrt(
-
-            (n11 + n10)
-
-            *
-
-            (n01 + n00)
-
-            *
-
-            (n11 + n01)
-
-            *
-
-            (n10 + n00)
-        )
-
-
-        temp["phi"] = np.where(
-
-            denominator > 0,
-
-            numerator / denominator,
-
-            0
-        )
-
-
-        cb = (
-
-            temp[
-                "n_code_before_target"
             ]
-            .fillna(0)
-            .astype(float)
+
+            .dropna()
+
+            .unique()
+
+            .tolist()
         )
 
 
-        tb = (
+        try:
 
-            temp[
-                "n_target_before_code"
-            ]
-            .fillna(0)
-            .astype(float)
-        )
-
-
-        temp["source"] = np.where(
-
-            cb >= tb,
-
-            temp[
-                "concept_code"
-            ],
-
-            temp[
-                "target_concept_code"
-            ]
-        )
-
-
-        temp["target"] = np.where(
-
-            cb >= tb,
-
-            temp[
-                "target_concept_code"
-            ],
-
-            temp[
-                "concept_code"
-            ]
-        )
-
-
-        temp[
-            "temporal_strength"
-        ] = np.maximum(
-            cb,
-            tb
-        )
-
-
-        temp[
-            "association_strength"
-        ] = (
-            temp["phi"]
-            .abs()
-        )
-
-
-        return (
-
-            temp
-            .sort_values(
-
-                [
-                    "temporal_strength",
-                    "association_strength"
-                ],
-
-                ascending=False
+            values = sorted(
+                values
             )
 
-            .drop_duplicates(
-                [
-                    "source",
-                    "target"
-                ]
-            )
+        except Exception:
 
-            [
-                [
-                    "source",
-                    "target",
-                    "temporal_strength",
-                    "association_strength"
-                ]
-            ]
-        )
-
-
-    demi_edges = demi_candidate_edges(
-        BN_FEATURES,
-        kb
-    )
-
-
-    # --------------------------------------------------------
-    # 12. Build DAG
-    # --------------------------------------------------------
-
-    MAX_PREDICTOR_PARENTS = 2
-
-
-    G = nx.DiGraph()
-
-
-    G.add_nodes_from(
-        BN_FEATURES
-        +
-        [TARGET]
-    )
-
-
-    for _, row in (
-        demi_edges.iterrows()
-    ):
-
-        source = row["source"]
-        target = row["target"]
-
-
-        if source == target:
-            continue
-
-
-        if (
-            G.in_degree(target)
-            >=
-            MAX_PREDICTOR_PARENTS
-        ):
-
-            continue
-
-
-        G.add_edge(
-            source,
-            target
-        )
-
-
-        if not (
-            nx.is_directed_acyclic_graph(
-                G
-            )
-        ):
-
-            G.remove_edge(
-                source,
-                target
+            values = sorted(
+                values,
+                key=lambda x: str(x)
             )
 
 
-   # --------------------------------------------------------
-# Selected direct predictors of PCR
-# --------------------------------------------------------
-
-    PCR_PARENTS = [
-        "HOME_TEST_RESULT_PRE_PCR",   # At-home COVID test
-        "30158-Symtpom_Neuro-8",      # Loss of taste
-        "30158-Symtpom_Neuro-7",      # Loss of smell
-        "30166-Prev_exposure-1",      # Recent COVID exposure
-        "32136-vaccine_didyou"        # Vaccination status
-    ]
-
-# Keep only variables that were selected for the Bayesian network
-    PCR_PARENTS = [
-        variable
-        for variable in PCR_PARENTS
-        if variable in BN_FEATURES
-    ]
-
-    for variable in PCR_PARENTS:
-        G.add_edge(
-            variable,
-            TARGET
-        )
-    # --------------------------------------------------------
-    # 13. Fit Bayesian CPDs
-    # --------------------------------------------------------
-
-    bn_model = (
-        DiscreteBayesianNetwork(
-            list(G.edges())
-        )
-    )
-
-
-    for node in G.nodes():
-
-        if (
-            node
-            not in
-            bn_model.nodes()
-        ):
-
-            bn_model.add_node(
-                node
-            )
-
-
-    estimator = BayesianEstimator(
-
-        bn_model,
-
-        bn_data[
-            BN_FEATURES
-            +
-            [TARGET]
-        ]
-    )
-
-
-    cpds = estimator.get_parameters(
-
-        prior_type="BDeu",
-
-        equivalent_sample_size=10
-    )
-
-
-    bn_model.add_cpds(
-        *cpds
-    )
-
-
-    inference = (
-        VariableElimination(
-            bn_model
-        )
-    )
+        observed_states[
+            variable
+        ] = values
 
 
     # --------------------------------------------------------
-    # 14. Allowed states
-    # --------------------------------------------------------
-
-    allowed_states = {
-
-        variable:
-            sorted(
-                bn_data[
-                    variable
-                ]
-                .astype(str)
-                .unique()
-                .tolist()
-            )
-
-        for variable
-        in BN_FEATURES
-    }
-
-
-    # --------------------------------------------------------
-    # Return everything Streamlit needs
+    # Return app objects
     # --------------------------------------------------------
 
     return {
 
-        "bn_model":
-            bn_model,
+        "analysis_df":
+            analysis_df,
 
-        "inference":
-            inference,
+        "lasso_A":
+            lasso_A,
 
-        "bn_data":
-            bn_data,
+        "lasso_B":
+            lasso_B,
 
-        "BN_FEATURES":
-            BN_FEATURES,
-        
-        "PCR_PARENTS":
-            PCR_PARENTS,
+        "MODEL_A_FEATURES":
+            MODEL_A_FEATURES,
 
-        "allowed_states":
-            allowed_states,
+        "MODEL_B_FEATURES":
+            MODEL_B_FEATURES,
 
-        "display_name":
-            display_name,
+        "APP_FEATURES":
+            APP_FEATURES,
+
+        "observed_states":
+            observed_states,
 
         "importance_B":
             importance_B,
 
-        "G":
-            G
+        "display_name":
+            short_description
     }
 
 
 # ============================================================
-# BUILD MODEL
+# LOAD MODELS
 # ============================================================
 
-with st.spinner("Loading COVID-19 diagnostic model..."):
-    model_objects = build_covid_model()
+with st.spinner(
+    "Loading COVID-19 predictive models..."
+):
 
-bn_model = model_objects["bn_model"]
-inference = model_objects["inference"]
-bn_data = model_objects["bn_data"]
-BN_FEATURES = model_objects["BN_FEATURES"]
-PCR_PARENTS = model_objects["PCR_PARENTS"]
-allowed_states = model_objects["allowed_states"]
-display_name = model_objects["display_name"]
-importance_B = model_objects["importance_B"]
-G = model_objects["G"]
+    model_objects = build_models()
 
-# ============================================================
-# DEBUG: CHECK DIRECT PCR PARENTS
-# ============================================================
 
-st.write("### Direct PCR Parents")
-
-for variable in PCR_PARENTS:
-    st.write("-", display_name(variable))
-
-# DEBUG: Check Bayesian network
-
-st.write("### Model Debug Information")
-
-st.write("Bayesian network valid:", bn_model.check_model())
-
-st.write("BN Features:")
-st.write(BN_FEATURES)
-
-st.write("Direct parents of PCR:")
-st.write(list(bn_model.get_parents(TARGET)))
-
-debug_result = inference.query(
-    variables=[TARGET],
-    show_progress=False
+analysis_df = (
+    model_objects[
+        "analysis_df"
+    ]
 )
 
-st.write("Baseline PCR distribution:")
-st.write(debug_result)
-
-st.write(
-    "PCR target states:",
-    debug_result.state_names[TARGET]
+lasso_A = (
+    model_objects[
+        "lasso_A"
+    ]
 )
+
+lasso_B = (
+    model_objects[
+        "lasso_B"
+    ]
+)
+
+MODEL_A_FEATURES = (
+    model_objects[
+        "MODEL_A_FEATURES"
+    ]
+)
+
+MODEL_B_FEATURES = (
+    model_objects[
+        "MODEL_B_FEATURES"
+    ]
+)
+
+APP_FEATURES = (
+    model_objects[
+        "APP_FEATURES"
+    ]
+)
+
+observed_states = (
+    model_objects[
+        "observed_states"
+    ]
+)
+
+importance_B = (
+    model_objects[
+        "importance_B"
+    ]
+)
+
+display_name = (
+    model_objects[
+        "display_name"
+    ]
+)
+
+
 # ============================================================
-# COVID PROBABILITY FUNCTION
+# PREDICTION FUNCTIONS
 # ============================================================
 
-def covid_probability(evidence):
+def create_patient_row(
+    model_features,
+    evidence
+):
 
-    clean = {}
+    patient = pd.DataFrame(
+
+        {
+
+            variable:
+                [np.nan]
+
+            for variable
+            in model_features
+
+        }
+
+    )
 
 
-    for variable, state in (
-        evidence.items()
+    for variable, value in evidence.items():
+
+        if variable in patient.columns:
+
+            patient.loc[
+                0,
+                variable
+            ] = value
+
+
+    return patient
+
+
+def predict_model_A(
+    evidence
+):
+
+    # Remove home test because
+    # Model A must not use it
+
+    home_evidence = {
+
+        variable:
+            value
+
+        for variable, value
+        in evidence.items()
+
+        if variable != HOME_TEST_VAR
+    }
+
+
+    patient = create_patient_row(
+
+        MODEL_A_FEATURES,
+
+        home_evidence
+
+    )
+
+
+    probability = (
+        lasso_A
+        .predict_proba(
+            patient
+        )[0, 1]
+    )
+
+
+    return float(
+        probability
+    )
+
+
+def predict_model_B(
+    evidence
+):
+
+    patient = create_patient_row(
+
+        MODEL_B_FEATURES,
+
+        evidence
+
+    )
+
+
+    probability = (
+        lasso_B
+        .predict_proba(
+            patient
+        )[0, 1]
+    )
+
+
+    return float(
+        probability
+    )
+
+
+# ============================================================
+# FRIENDLY INPUT LABELS
+# ============================================================
+
+def friendly_state(value):
+
+    if value is None:
+
+        return "Not provided"
+
+
+    if isinstance(
+        value,
+        (int, float, np.integer, np.floating)
     ):
 
-        if (
-            variable
-            not in
-            BN_FEATURES
-        ):
+        if pd.isna(value):
 
-            continue
+            return "Not provided"
 
 
-        state = str(state)
+        if float(value) == 0:
+
+            return "No"
 
 
-        if (
-            state
-            not in
-            allowed_states[variable]
-        ):
+        if float(value) == 1:
 
-            continue
+            return "Yes"
 
 
-        clean[variable] = state
+        if float(value).is_integer():
+
+            return str(
+                int(value)
+            )
 
 
-    result = inference.query(
-
-        variables=[TARGET],
-
-        evidence=clean,
-
-        show_progress=False
-    )
-
-
-    states = [
-
-        str(x)
-
-        for x in
-        result.state_names[TARGET]
-    ]
-
-
-    prob_map = dict(
-
-        zip(
-            states,
-            result.values
-        )
-    )
-
-
-    return prob_map.get(
-
-        "1",
-
-        prob_map.get(
-            "1.0",
-            np.nan
-        )
+    return str(
+        value
     )
 
 
 # ============================================================
-# USER INTERFACE
+# PAGE CONTENT
 # ============================================================
 
 st.title(
     "COVID-19 Home Diagnostic AI"
 )
 
+
 st.write(
     """
-    This application estimates the probability of a
-    **PCR-positive COVID-19 result** using information
-    available at home before a clinic or emergency-room visit.
+    This academic AI prototype estimates the probability of a
+    **PCR-positive COVID-19 result** using information available
+    at home before a clinic or emergency-room visit.
     """
 )
 
 
 st.info(
     """
-    This application is an academic predictive prototype.
-    It is not intended to replace professional medical
-    diagnosis, clinical evaluation, or laboratory testing.
+    This application is intended for academic and research
+    demonstration only. It should not be used as a substitute
+    for professional medical evaluation or diagnostic testing.
     """
 )
 
 
 # ============================================================
-# DISPLAY MODEL INFORMATION
+# ABOUT MODEL
 # ============================================================
 
 with st.expander(
-    "About the model"
+    "About the predictive models"
 ):
 
-    st.write(
+    st.markdown(
         """
-        The Bayesian network uses the top 10 predictors
-        identified by the Model B LASSO analysis
-        (home information + at-home COVID test).
+        **Model A — Home Information Only**
+
+        Uses eligible information available before the
+        home-test result.
+
+        **Model B — Home Information + At-Home Test**
+
+        Uses the same home information plus the derived
+        pre-PCR at-home COVID test result.
+
+        Both probabilities shown in this application are
+        generated using LASSO logistic regression models.
         """
     )
-
-    st.write(
-        "**Selected Bayesian-network predictors:**"
-    )
-
-    for variable in BN_FEATURES:
-
-        st.write(
-            f"- {display_name(variable)}"
-        )
 
 
 # ============================================================
@@ -1721,9 +1427,8 @@ st.subheader(
 
 st.write(
     """
-    You may leave a variable as **Not provided**.
-    Bayesian inference will then estimate the PCR probability
-    using the remaining information.
+    Enter the information available for the patient.
+    Fields may be left as **Not provided**.
     """
 )
 
@@ -1731,79 +1436,83 @@ st.write(
 evidence = {}
 
 
-for variable in PCR_PARENTS:
+for variable in APP_FEATURES:
 
     label = display_name(
         variable
     )
 
 
-    states = allowed_states[
+    states = observed_states[
         variable
     ]
 
 
-    # --------------------------------------------
-    # Special handling for at-home test
-    # --------------------------------------------
+    # --------------------------------------------------------
+    # Home test
+    # --------------------------------------------------------
 
     if variable == HOME_TEST_VAR:
 
-        available_test_states = [
-
-            state
-
-            for state in
-            [
-                "Negative",
-                "Positive",
-                "Invalid",
-                "Unknown"
-            ]
-
-            if state in states
+        test_options = [
+            None
         ]
 
 
-        options = (
-            ["No home test"]
-            +
-            available_test_states
-        )
+        preferred_order = [
+
+            "Negative",
+
+            "Positive",
+
+            "Invalid",
+
+            "Unknown"
+        ]
+
+
+        for state in preferred_order:
+
+            if state in states:
+
+                test_options.append(
+                    state
+                )
 
 
         selection = st.selectbox(
 
             label,
 
-            options,
+            test_options,
+
+            format_func=lambda x:
+                (
+                    "No home test"
+                    if x is None
+                    else str(x)
+                ),
 
             key=variable
         )
 
 
-        if (
-            selection
-            !=
-            "No home test"
-        ):
+        if selection is not None:
 
             evidence[
                 variable
             ] = selection
 
 
-    # --------------------------------------------
-    # All other predictors
-    # --------------------------------------------
+    # --------------------------------------------------------
+    # Other home information
+    # --------------------------------------------------------
 
     else:
 
-        options = (
-            ["Not provided"]
-            +
-            states
-        )
+        options = [
+            None
+        ] + states
 
 
         selection = st.selectbox(
@@ -1812,15 +1521,13 @@ for variable in PCR_PARENTS:
 
             options,
 
+            format_func=friendly_state,
+
             key=variable
         )
 
 
-        if (
-            selection
-            !=
-            "Not provided"
-        ):
+        if selection is not None:
 
             evidence[
                 variable
@@ -1828,7 +1535,7 @@ for variable in PCR_PARENTS:
 
 
 # ============================================================
-# CALCULATE PROBABILITY
+# ESTIMATE PROBABILITY
 # ============================================================
 
 st.divider()
@@ -1845,81 +1552,85 @@ if st.button(
             "Please enter at least one piece of home information."
         )
 
+
     else:
-         # DEBUG: Check whether this exact evidence pattern
-        # exists in the training data
 
-        matching = bn_data.copy()
+        # ----------------------------------------------------
+        # Model A
+        # ----------------------------------------------------
 
-        for variable, state in evidence.items():
-            matching = matching[
-                matching[variable].astype(str) == str(state)
-            ]
-
-        st.write("Exact matching training records:", len(matching))
-
-        if len(matching) > 0:
-            st.write(
-                "PCR-positive rate among exact matches:",
-                round(
-                    (matching[TARGET].astype(str) == "1").mean(),
-                    3
-                )
-            )
-        else:
-            st.warning(
-                "This exact combination of predictor values was not "
-                "observed in the training dataset."
-            )
-
-        probability = covid_probability(
+        probability_A = predict_model_A(
             evidence
         )
 
+
+        # ----------------------------------------------------
+        # Model B only when home-test information exists
+        # ----------------------------------------------------
+
+        has_home_test = (
+            HOME_TEST_VAR
+            in evidence
+        )
+
+
+        if has_home_test:
+
+            probability_B = predict_model_B(
+                evidence
+            )
+
+        else:
+
+            probability_B = None
+
+
+        # ----------------------------------------------------
+        # Primary result
+        # ----------------------------------------------------
 
         st.subheader(
             "Estimated Result"
         )
 
 
-        st.metric(
+        if has_home_test:
 
-            label=(
-                "Estimated probability "
-                "of PCR-positive COVID-19"
-            ),
+            st.metric(
 
-            value=(
-                f"{probability * 100:.1f}%"
-            )
-        )
+                label=(
+                    "Estimated probability of "
+                    "PCR-positive COVID-19 "
+                    "(Model B)"
+                ),
 
-
-        # ----------------------------------------
-        # Compare with and without home test
-        # ----------------------------------------
-
-        if (
-            HOME_TEST_VAR
-            in evidence
-        ):
-
-            evidence_without_test = (
-                evidence.copy()
-            )
-
-
-            evidence_without_test.pop(
-                HOME_TEST_VAR
-            )
-
-
-            probability_without_test = (
-                covid_probability(
-                    evidence_without_test
+                value=(
+                    f"{probability_B * 100:.1f}%"
                 )
             )
 
+
+        else:
+
+            st.metric(
+
+                label=(
+                    "Estimated probability of "
+                    "PCR-positive COVID-19 "
+                    "(Model A)"
+                ),
+
+                value=(
+                    f"{probability_A * 100:.1f}%"
+                )
+            )
+
+
+        # ----------------------------------------------------
+        # Comparison
+        # ----------------------------------------------------
+
+        if has_home_test:
 
             st.write(
                 "**Comparison with and without the home test:**"
@@ -1930,73 +1641,97 @@ if st.button(
 
                 "Scenario": [
 
-                    "Home information only",
+                    "Model A — Home information only",
 
                     (
-                        "Home information "
+                        "Model B — Home information "
                         "+ at-home test"
                     )
                 ],
 
                 "Estimated PCR-positive probability": [
 
-                    f"{probability_without_test * 100:.1f}%",
+                    f"{probability_A * 100:.1f}%",
 
-                    f"{probability * 100:.1f}%"
+                    f"{probability_B * 100:.1f}%"
                 ]
             })
 
 
             st.dataframe(
+
                 comparison,
+
                 hide_index=True,
+
                 use_container_width=True
             )
 
 
-        # ----------------------------------------
-        # Show evidence entered
-        # ----------------------------------------
+            difference = (
+                probability_B
+                -
+                probability_A
+            )
+
+
+            st.write(
+
+                "Change after adding the at-home test: "
+                f"**{difference * 100:+.1f} percentage points**"
+            )
+
+
+        # ----------------------------------------------------
+        # Evidence table
+        # ----------------------------------------------------
 
         with st.expander(
-            "Evidence used in this estimate"
+            "Information used in this estimate"
         ):
 
-            evidence_table = (
-                pd.DataFrame(
-                    [
-                        {
-                            "Predictor":
-                                display_name(
-                                    variable
-                                ),
+            evidence_table = pd.DataFrame(
 
-                            "Entered state":
-                                state
-                        }
+                [
 
-                        for (
-                            variable,
-                            state
-                        )
-                        in evidence.items()
-                    ]
-                )
+                    {
+
+                        "Predictor":
+                            display_name(
+                                variable
+                            ),
+
+                        "Entered value":
+                            friendly_state(
+                                value
+                            )
+
+                    }
+
+                    for variable, value
+                    in evidence.items()
+
+                ]
+
             )
 
 
             st.dataframe(
+
                 evidence_table,
+
                 hide_index=True,
+
                 use_container_width=True
             )
 
 
 # ============================================================
-# SHOW TOP MODEL B FEATURES
+# MODEL B FEATURE IMPORTANCE
 # ============================================================
 
 st.divider()
+
 
 st.subheader(
     "Top Model B LASSO Predictors"
@@ -2025,17 +1760,49 @@ top_features[
 top_features = top_features[
 
     [
+
         "Predictor",
+
         "LASSO_Importance"
+
     ]
+
 ]
 
 
 st.dataframe(
+
     top_features,
+
     hide_index=True,
+
     use_container_width=True
 )
+
+
+# ============================================================
+# PROJECT NOTE
+# ============================================================
+
+with st.expander(
+    "Bayesian-network component"
+):
+
+    st.write(
+        """
+        The full project notebook also constructs a Bayesian
+        network using LASSO-selected variables, DEMI temporal
+        relationships, NetworkX, and pgmpy.
+
+        The Bayesian network is retained as the probabilistic
+        network-analysis component of the project. The interactive
+        Streamlit prediction tool uses the fitted LASSO models
+        because they can generate estimates for new combinations
+        of patient information without requiring an exact
+        Bayesian CPT combination to have been observed in the
+        training data.
+        """
+    )
 
 
 # ============================================================
@@ -2045,6 +1812,6 @@ st.dataframe(
 st.caption(
     """
     COVID-19 Home Diagnostic AI |
-    Python • scikit-learn • NetworkX • pgmpy • Streamlit
+    Python • scikit-learn • LASSO • Streamlit
     """
 )
