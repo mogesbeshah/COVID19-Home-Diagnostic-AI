@@ -1671,26 +1671,26 @@ if st.button(
                 f"**{difference * 100:+.1f} percentage points**"
             )
 
-        if difference > 0:
+            if difference > 0:
 
-            st.write(
-                "The at-home test increased the estimated "
+                st.write(
+                    "The at-home test increased the estimated "
+                    "probability of a PCR-positive result."
+            )
+
+            elif difference < 0:
+
+                st.write(
+                "The at-home test decreased the estimated "
                 "probability of a PCR-positive result."
-        )
+            )
 
-        elif difference < 0:
+            else:
 
-            st.write(
-            "The at-home test decreased the estimated "
-            "probability of a PCR-positive result."
-        )
-
-        else:
-
-            st.write(
-                "The at-home test did not change the estimated "
-                "probability of a PCR-positive result."
-        )
+                st.write(
+                    "The at-home test did not change the estimated "
+                    "probability of a PCR-positive result."
+            )
 
         # ----------------------------------------------------
         # Evidence table
