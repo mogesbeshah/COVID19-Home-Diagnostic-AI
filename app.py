@@ -1519,48 +1519,42 @@ def build_covid_model():
 # BUILD MODEL
 # ============================================================
 
-with st.spinner(
-    "Loading COVID-19 diagnostic model..."
-):
+with st.spinner("Loading COVID-19 diagnostic model..."):
+    model_objects = build_covid_model()
 
-    model_objects = (
-        build_covid_model()
-    )
+bn_model = model_objects["bn_model"]
+inference = model_objects["inference"]
+bn_data = model_objects["bn_data"]
+BN_FEATURES = model_objects["BN_FEATURES"]
+allowed_states = model_objects["allowed_states"]
+display_name = model_objects["display_name"]
+importance_B = model_objects["importance_B"]
+G = model_objects["G"]
 
+# DEBUG: Check Bayesian network
 
-bn_model = (
-    model_objects["bn_model"]
+st.write("### Model Debug Information")
+
+st.write("Bayesian network valid:", bn_model.check_model())
+
+st.write("BN Features:")
+st.write(BN_FEATURES)
+
+st.write("Direct parents of PCR:")
+st.write(list(bn_model.get_parents(TARGET)))
+
+debug_result = inference.query(
+    variables=[TARGET],
+    show_progress=False
 )
 
-inference = (
-    model_objects["inference"]
+st.write("Baseline PCR distribution:")
+st.write(debug_result)
+
+st.write(
+    "PCR target states:",
+    debug_result.state_names[TARGET]
 )
-
-bn_data = (
-    model_objects["bn_data"]
-)
-
-BN_FEATURES = (
-    model_objects["BN_FEATURES"]
-)
-
-allowed_states = (
-    model_objects["allowed_states"]
-)
-
-display_name = (
-    model_objects["display_name"]
-)
-
-importance_B = (
-    model_objects["importance_B"]
-)
-
-G = (
-    model_objects["G"]
-)
-
-
 # ============================================================
 # COVID PROBABILITY FUNCTION
 # ============================================================
