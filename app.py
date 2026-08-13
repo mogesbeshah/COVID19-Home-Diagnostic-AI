@@ -1310,12 +1310,30 @@ def predict_model_B(
 # FRIENDLY INPUT LABELS
 # ============================================================
 
-def friendly_state(value):
+def friendly_state(value, variable=None):
 
+    # Special labels for vaccination status
+    if variable == "32136-vaccine_didyou":
+
+        vaccine_labels = {
+            1: "Yes",
+            2: "No",
+            4: "Not sure — participated in a COVID-19 vaccination trial",
+            999: "Prefer not to answer"
+        }
+
+        try:
+            numeric_value = int(float(value))
+
+            if numeric_value in vaccine_labels:
+                return vaccine_labels[numeric_value]
+
+        except (ValueError, TypeError):
+            pass
+
+    # General formatting for all other variables
     if value is None:
-
         return "Not provided"
-
 
     if isinstance(
         value,
@@ -1323,32 +1341,18 @@ def friendly_state(value):
     ):
 
         if pd.isna(value):
-
             return "Not provided"
 
-
         if float(value) == 0:
-
             return "No"
 
-
         if float(value) == 1:
-
             return "Yes"
 
-
         if float(value).is_integer():
+            return str(int(value))
 
-            return str(
-                int(value)
-            )
-
-
-    return str(
-        value
-    )
-
-
+    return str(value)
 # ============================================================
 # PAGE CONTENT
 # ============================================================
@@ -1507,7 +1511,7 @@ for variable in APP_FEATURES:
 
             options,
 
-            format_func=friendly_state,
+            format_func=lambda x, v=variable: friendly_state(x, v),
 
             key=variable
         )
@@ -1689,7 +1693,8 @@ if st.button(
 
                         "Entered value":
                             friendly_state(
-                                value
+                                value,
+                                variable
                             )
 
                     }
