@@ -1,0 +1,192 @@
+Variable,LASSO_Importance,Short_Description
+HOME_TEST_RESULT_PRE_PCR,3.9786442763736565,At-home COVID test result
+30158-Symtpom_Neuro-8,1.5526309541833125,Loss of taste
+30075-Other_household,1.350841936705277,Please enter the number below.
+30103-conditionsrisks-13,1.0618430622090904,"Mental Health conditions, including serious mental illness"
+32136-vaccine_didyou,0.9273796864813847,Vaccination Status
+30101-ace_medication,0.9133895906416551,ACE medication details
+30166-Prev_exposure-1,0.7262793923224266,No
+32137-vaccine_avail,0.6311012180652653,Vaccination Likeliness to Receive
+30158-Symtpom_Neuro-7,0.5983798703427726,Loss of smell
+30172-COVID_vaccine_type,0.5175723721010667,2-dose type vaccine received
+30107-alcohol_consume,0.4779988035333445,Alcohol Use
+30161-Symptom_Inflamm_othe,0.4666568480625103,Inflammatory pre-existing
+32144-DOB_pnta,0.4642519620976891,Participant declines to share Date of Birth
+30160-Symptom_Inflamm-2,0.4313351500837649,Joint or any other unexplained pain
+32135-annual_income,0.3338797800460181,Income level
+30153-Symptoms-2,0.3138672590846432,Fever or feeling feverish
+30103-conditionsrisks-20,0.3005602620789608,I do not have any underlying conditions or risk factors
+30113-Insurance_Plan,0.22262920366908523,Insurance Plan Type
+30155-Symptom_Resp_other,0.20940332877340778,Respiratory pre-existing
+30714-Weight,0.15194555677049298,Participants weight in pounds
+30712-Height_Feet,0.12498195902273564,(enter feet and inches separately)
+32604-Symptoms_Ill_17,0.12283253308054762,Muscle aches (not due to exercise)
+30168-Distance,0.08227792072933919,This means a safe distance (at least 6 feet) from others.
+30154-Symptoms_Resp-4,0.06268384718783974,Difficulty breathing
+30170-Flu_shot,0.06058862225150282,Flu vaccine status
+30086-Gender-1,0.037939120631870736,Man
+30103-conditionsrisks-22,0.02255693598183253,Chronic kidney disease
+30159-Symptom_Neuro_Other,0.017112960263200867,Neurological pre-existing
+30086-Gender-2,0.001649901095132994,Woman
+30082-Race-1,0.0,White
+30082-Race-4,0.0,American Indian or Alaska Native
+30103-conditionsrisks-19,0.0,Other
+30103-conditionsrisks-2,0.0,Diabetes
+30103-conditionsrisks-16,0.0,Cancer
+30103-conditionsrisks-23,0.0,Chronic lung disease
+30103-conditionsrisks-6,0.0,Renal disease
+30103-conditionsrisks-7,0.0,Liver disease
+30103-conditionsrisks-4,0.0,Obesity
+30103-conditionsrisks-3,0.0,Hypertension
+30103-conditionsrisks-9,0.0,Current smoker (tobacco)
+30103-conditionsrisks-8,0.0,Immunosuppressive disease
+30106-currently_pregnant,0.0,Pregnancy Status
+30103-conditionsrisks-999,0.0,Prefer not to answer
+30108-employed_currently,0.0,Employment Status
+30082-Race-3,0.0,Asian
+30082-Race-5,0.0,Native Hawaiian or Other Pacific Islander
+30082-Race-6,0.0,Other
+30086-Gender-3,0.0,Non-Binary
+30085-Ethnicity,0.0,Ethnicity
+30082-Race-998,0.0,None of the above
+30082-Race-999,0.0,Prefer not to answer
+30100-weight_options,0.0,Unable to provide weight
+30097-Height_options,0.0,Unable to provide height
+30090-Birthsex,0.0,Sex at Birth
+30091-Education,0.0,Education Reached
+30103-conditionsrisks-10,0.0,Current substance use
+30102-blood_type,0.0,Blood Type
+30103-conditionsrisks-14,0.0,Asthma
+30103-conditionsrisks-15,0.0,Sickle cell disease
+30103-conditionsrisks-17,0.0,Current Vape Use
+30082-Race-2,0.0,Black or African American
+30072-Household,0.0,Participant housing/living conditions
+30081-general_health,0.0,General Health Response
+30153-Symptoms-999,0.0,Prefer not to answer
+30153-Symptoms-6,0.0,Chills
+30153-Symptoms-5,0.0,Fatigue (more than normal)
+30153-Symptoms-4,0.0,Pinkeye or Conjunctivitis
+30153-Symptoms-3,0.0,Muscle aches (not due to exercise)
+30153-Symptoms-1,0.0,None
+30144-Flu_Result,0.0,Last 30 Days FLU Tested Results
+30124-ColorBlind_type,0.0,Color Blind Type
+30120-Walking,0.0,Difficulty Walking
+30123-ColorBlind,0.0,Color Blind Status
+30122-Errands,0.0,Difficulty with Errands
+30121-Dressing,0.0,Difficulty Dressing
+30118-Blind,0.0,Blind Status
+30119-Concentrating,0.0,Difficulty Concentrating
+30117-Deaf,0.0,Deaf Status
+30112-Insurance,0.0,Insurance Status
+30103-conditionsrisks-5,0.0,Cardiovascular disease
+30110-essential_worker,0.0,Essential Worker Status
+30109-health_professional,0.0,Health Professional Status
+30156-Symptom_GI-3,0.0,Stomach or abdominal pain
+30158-Symtpom_Neuro-3,0.0,Loss of balance
+30157-Symtpom_GI_other,0.0,Gastrointestinal Pre-existing
+30158-Symtpom_Neuro-2,0.0,Headaches
+30158-Symtpom_Neuro-1,0.0,None
+30156-Symptom_GI-999,0.0,Prefer not to answer
+30156-Symptom_GI-5,0.0,Nausea or vomiting
+30156-Symptom_GI-4,0.0,Change in or loss of appetite
+30156-Symptom_GI-1,0.0,None
+30154-Symptoms_Resp-7,0.0,Chest pain
+30154-Symptoms_Resp-999,0.0,Prefer not to answer
+30154-Symptoms_Resp-21,0.0,Sore throat
+30154-Symptoms_Resp-1,0.0,None
+30160-Symptom_Inflamm-5,0.0,Excessive sweating
+30160-Symptom_Inflamm-4,0.0,Unexplained rashes anywhere else
+30160-Symptom_Inflamm-1,0.0,None
+30158-Symtpom_Neuro-999,0.0,Prefer not to answer
+30158-Symtpom_Neuro-9,0.0,Any tingling/numbness/swelling in hands or feet
+30166-Prev_exposure-2,0.0,"Yes, with COVID-19;"
+30160-Symptom_Inflamm-999,0.0,Prefer not to answer
+30165-Prev_Diag,0.0,Previously recovered from COVID in last 90 days
+30167-Mask,0.0,"This includes work/office, social gatherings, house of worship, medical facility, school, restaurants/bars, sports/recreation or any public transportation such as airlines, or ride sharing situations."
+30166-Prev_exposure-999,0.0,Prefer not to answer
+30166-Prev_exposure-3,0.0,"Yes, with flu"
+30169-Food_poison,0.0,Food poisining status in last 14 days
+30171-COVID_vaccine,0.0,COVID vaccine status
+30175-COVID_vaccine_type_2,0.0,1-dose type vaccine recevied
+30182-Travel,0.0,Travel in last 14 days Domestically (outside of virginia)
+30183-states_specify-10,0.0,Participant traveled in the last 14 days to the following: Florida
+30183-states_specify-11,0.0,Participant traveled in the last 14 days to the following: Georgia
+30183-states_specify-14,0.0,Participant traveled in the last 14 days to the following: Illinois
+30183-states_specify-20,0.0,Participant traveled in the last 14 days to the following: Maine
+30183-states_specify-21,0.0,Participant traveled in the last 14 days to the following: Montana
+30183-states_specify-23,0.0,Participant traveled in the last 14 days to the following: Nevada
+30183-states_specify-24,0.0,Participant traveled in the last 14 days to the following: New Hampshire
+30183-states_specify-25,0.0,Participant traveled in the last 14 days to the following: New Jersey
+30183-states_specify-27,0.0,Participant traveled in the last 14 days to the following: New York
+30158-Symtpom_Neuro-6,0.0,Unusual shivering or shaking
+30158-Symtpom_Neuro-5,0.0,New confusion
+30158-Symtpom_Neuro-4,0.0,Slurred speech
+30156-Symptom_GI-2,0.0,Diarrhea
+30154-Symptoms_Resp-3,0.0,Cough
+30154-Symptoms_Resp-5,0.0,Wheezing
+30154-Symptoms_Resp-6,0.0,Shortness of breath
+30154-Symptoms_Resp-2,0.0,Runny nose
+30183-states_specify-42,0.0,Participant traveled in the last 14 days to the following: South Carolina
+30183-states_specify-41,0.0,Participant traveled in the last 14 days to the following: Rhode Island
+30183-states_specify-39,0.0,Participant traveled in the last 14 days to the following: Pennsylvania
+30183-states_specify-38,0.0,Participant traveled in the last 14 days to the following: Missouri
+30183-states_specify-34,0.0,Participant traveled in the last 14 days to the following: Massachusetts
+30183-states_specify-33,0.0,Participant traveled in the last 14 days to the following: Maryland
+30183-states_specify-3,0.0,Participant traveled in the last 14 days to the following: Arizona
+30183-states_specify-28,0.0,Participant traveled in the last 14 days to the following: North Carolina
+30428-housecount_specify,0.0,Number of people other that the participant that live in the home:
+30184-International,0.0,Travel in last 14 days Internationally (outside of usa)
+30183-states_specify-9,0.0,Participant traveled in the last 14 days to the following: District of Columbia
+30183-states_specify-6,0.0,Participant traveled in the last 14 days to the following: Colorado
+30713-Height_Inches,0.0,(enter feet and inches separately)
+30183-states_specify-45,0.0,Participant traveled in the last 14 days to the following: Texas
+30183-states_specify-52,0.0,Participant traveled in the last 14 days to the following: Wyoming
+30183-states_specify-50,0.0,Participant traveled in the last 14 days to the following: West Virginia
+32138-vaccine_factors-12,0.0,I already had COVID-19
+32138-vaccine_factors-13,0.0,I am going to let others get it first (herd immunity)
+32138-vaccine_factors-14,0.0,I have had severe allergic reactions to vaccines in the past
+32138-vaccine_factors-15,0.0,I am concerned that it will not interact with other medications/treatments that I am currently taking
+32138-vaccine_factors-16,0.0,"I am currently pregnant, planning a pregnancy, or breastfeeding"
+32138-vaccine_factors-17,0.0,Do not know yet
+32138-vaccine_factors-18,0.0,Other
+32138-vaccine_factors-2,0.0,It's just a virus/not fatal/not necessary
+32138-vaccine_factors-3,0.0,I never get vaccinated
+32138-vaccine_factors-4,0.0,I do not trust the vaccine
+32138-vaccine_factors-5,0.0,I do not want to pay for it
+32138-vaccine_factors-6,0.0,Vaccination location is not convenient
+32138-vaccine_factors-7,0.0,Difficult in making an appointment
+32138-vaccine_factors-1,0.0,I will not get/am never sick
+32138-vaccine_factors-10,0.0,I am not in the risk group with underlying conditions
+32138-vaccine_factors-11,0.0,I need more information first
+32138-vaccine_factors-999,0.0,Prefer not to answer
+32138-vaccine_factors-9,0.0,I have not thought about it yet
+32138-vaccine_factors-8,0.0,It depends on the risk/adverse events
+32588-Symptoms_Ill_1,0.0,Any tingling/numbness/swelling in hands or feet
+32592-Symptoms_Ill_5,0.0,Chills
+32593-Symptoms_Ill_6,0.0,Cough
+32590-Symptoms_Ill_3,0.0,Change in or loss of appetite
+32591-Symptoms_Ill_4,0.0,Chest pain
+32596-Symptoms_Ill_9,0.0,Excessive sweating
+32597-Symptoms_Ill_10,0.0,Fatigue (more than normal)
+32598-Symptoms_Ill_11,0.0,Fever or feverish feeling
+32599-Symptoms_Ill_12,0.0,Headaches
+32600-Symptoms_Ill_13,0.0,Joint or any other unexplained pain
+32601-Symptoms_Ill_14,0.0,Loss of balance
+32594-Symptoms_Ill_7,0.0,Diarrhea
+32595-Symptoms_Ill_8,0.0,Difficulty breathing
+32603-Symptoms_Ill_16,0.0,Loss of smell
+32602-Symptoms_Ill_15,0.0,Loss of taste
+32606-Symptoms_Ill_19,0.0,Pinkeye or Conjunctivitis
+32605-Symptoms_Ill_18,0.0,New confusion
+32610-Symptoms_Ill_23,0.0,Shortness of breath
+32611-Symptoms_Ill_24,0.0,Slurred speech
+32612-Symptoms_Ill_25,0.0,Sore throat
+32608-Symptoms_Ill_21,0.0,Runny nose
+32613-Symptoms_Ill_26,0.0,Stomach or abdominal pain
+32614-Symptoms_Ill_27,0.0,Unexplained rashes anywhere else
+32616-Symptoms_Ill_29,0.0,Nausea or vomiting
+32615-Symptoms_Ill_28,0.0,Unusual shivering or shaking
+32617-Symptoms_Ill_30,0.0,Wheezing
+32726-Gender_more-3,0.0,Genderqueer
+32726-Gender_more-4,0.0,Genderfluid
+32726-Gender_more-7,0.0,Questioning or unsure of your gender identity
