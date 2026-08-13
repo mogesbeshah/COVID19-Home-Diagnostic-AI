@@ -1717,7 +1717,7 @@ st.write(
 evidence = {}
 
 
-for variable in BN_FEATURES:
+for variable in PCR_PARENTS:
 
     label = display_name(
         variable
