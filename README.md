@@ -88,13 +88,13 @@ COVID19-Home-Diagnostic-AI/
 
 ##Main Python Libraries
 
--pandas
--NumPy
--scikit-learn
--Matplotlib
--NetworkX
--pgmpy
--Streamlit
+- pandas
+- NumPy
+- scikit-learn
+- Matplotlib
+- NetworkX
+- pgmpy
+- Streamlit
 
 ##Important Note
 
