@@ -1820,6 +1820,31 @@ if st.button(
         )
 
     else:
+         # DEBUG: Check whether this exact evidence pattern
+        # exists in the training data
+
+        matching = bn_data.copy()
+
+        for variable, state in evidence.items():
+            matching = matching[
+                matching[variable].astype(str) == str(state)
+            ]
+
+        st.write("Exact matching training records:", len(matching))
+
+        if len(matching) > 0:
+            st.write(
+                "PCR-positive rate among exact matches:",
+                round(
+                    (matching[TARGET].astype(str) == "1").mean(),
+                    3
+                )
+            )
+        else:
+            st.warning(
+                "This exact combination of predictor values was not "
+                "observed in the training dataset."
+            )
 
         probability = covid_probability(
             evidence
