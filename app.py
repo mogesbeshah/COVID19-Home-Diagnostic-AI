@@ -1395,29 +1395,30 @@ def build_covid_model():
             )
 
 
-    # Limit the number of direct PCR parents to reduce
-    # sparse combinations in the Bayesian probability table
+   # --------------------------------------------------------
+# Selected direct predictors of PCR
+# --------------------------------------------------------
 
-    MAX_PCR_PARENTS = 4
+    PCR_PARENTS = [
+        "HOME_TEST_RESULT_PRE_PCR",   # At-home COVID test
+        "30158-Symtpom_Neuro-8",      # Loss of taste
+        "30158-Symtpom_Neuro-7",      # Loss of smell
+        "30166-Prev_exposure-1",      # Recent COVID exposure
+        "32136-vaccine_didyou"        # Vaccination status
+    ]
 
-    PCR_PARENTS = (
-        importance_B[
-            importance_B["Variable"].isin(BN_FEATURES)
-        ]
-        .sort_values(
-            "LASSO_Importance",
-            ascending=False
-        )
-        .head(MAX_PCR_PARENTS)["Variable"]
-        .tolist()
-    )
+# Keep only variables that were selected for the Bayesian network
+    PCR_PARENTS = [
+        variable
+        for variable in PCR_PARENTS
+        if variable in BN_FEATURES
+    ]
 
     for variable in PCR_PARENTS:
         G.add_edge(
             variable,
             TARGET
         )
-
     # --------------------------------------------------------
     # 13. Fit Bayesian CPDs
     # --------------------------------------------------------
@@ -1546,6 +1547,15 @@ allowed_states = model_objects["allowed_states"]
 display_name = model_objects["display_name"]
 importance_B = model_objects["importance_B"]
 G = model_objects["G"]
+
+# ============================================================
+# DEBUG: CHECK DIRECT PCR PARENTS
+# ============================================================
+
+st.write("### Direct PCR Parents")
+
+for variable in PCR_PARENTS:
+    st.write("-", display_name(variable))
 
 # DEBUG: Check Bayesian network
 
