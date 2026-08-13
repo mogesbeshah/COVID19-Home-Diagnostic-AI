@@ -86,7 +86,7 @@ COVID19-Home-Diagnostic-AI/
     └── COVID19_Home_Diagnostic_AI.ipynb
 ```
 
-##Main Python Libraries
+## Main Python Libraries
 
 - pandas
 - NumPy
