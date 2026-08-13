@@ -1220,35 +1220,21 @@ display_name = (
 # PREDICTION FUNCTIONS
 # ============================================================
 
-def create_patient_row(
-    model_features,
-    evidence
-):
+def create_patient_row(model_features, evidence):
 
+    # Create one empty patient row that can hold
+    # both numeric values and text/categorical values
     patient = pd.DataFrame(
-
         {
-
-            variable:
-                [np.nan]
-
-            for variable
-            in model_features
-
+            variable: pd.Series([np.nan], dtype="object")
+            for variable in model_features
         }
-
     )
 
-
+    # Add the information entered by the user
     for variable, value in evidence.items():
-
         if variable in patient.columns:
-
-            patient.loc[
-                0,
-                variable
-            ] = value
-
+            patient.at[0, variable] = value
 
     return patient
 
