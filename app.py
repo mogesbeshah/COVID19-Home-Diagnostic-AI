@@ -1395,16 +1395,28 @@ def build_covid_model():
             )
 
 
-    # Same final notebook structure:
-    # all selected Model B features
-    # directly predict PCR
-    for variable in BN_FEATURES:
+    # Limit the number of direct PCR parents to reduce
+# sparse combinations in the Bayesian probability table
 
-        G.add_edge(
-            variable,
-            TARGET
-        )
+MAX_PCR_PARENTS = 4
 
+PCR_PARENTS = (
+    importance_B[
+        importance_B["Variable"].isin(BN_FEATURES)
+    ]
+    .sort_values(
+        "LASSO_Importance",
+        ascending=False
+    )
+    .head(MAX_PCR_PARENTS)["Variable"]
+    .tolist()
+)
+
+for variable in PCR_PARENTS:
+    G.add_edge(
+        variable,
+        TARGET
+    )
 
     # --------------------------------------------------------
     # 13. Fit Bayesian CPDs
