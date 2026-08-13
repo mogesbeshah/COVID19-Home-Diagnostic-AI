@@ -1,5 +1,21 @@
 # COVID-19 Home Diagnostic AI
 
+## Run the Project
+
+### GitHub Codespaces
+
+The complete project can be opened and executed directly in GitHub Codespaces:
+
+[Open in GitHub Codespaces](https://codespaces.new/mogesbeshah/COVID19-Home-Diagnostic-AI)
+
+After the Codespace opens:
+
+1. Install the required packages:
+   `pip install -r requirements.txt`
+2. Open `notebooks/COVID19_Home_Diagnostic_AI.ipynb`
+3. Select the Python kernel.
+4. Run all notebook cells from top to bottom.
+
 ## Project Objective
 
 This project develops a Python-based AI system to estimate the probability of PCR-positive COVID-19 using information available to a patient at home before visiting a clinic or emergency room.
