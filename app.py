@@ -1512,6 +1512,9 @@ def build_covid_model():
 
         "BN_FEATURES":
             BN_FEATURES,
+        
+        "PCR_PARENTS":
+            PCR_PARENTS,
 
         "allowed_states":
             allowed_states,
@@ -1538,6 +1541,7 @@ bn_model = model_objects["bn_model"]
 inference = model_objects["inference"]
 bn_data = model_objects["bn_data"]
 BN_FEATURES = model_objects["BN_FEATURES"]
+PCR_PARENTS = model_objects["PCR_PARENTS"]
 allowed_states = model_objects["allowed_states"]
 display_name = model_objects["display_name"]
 importance_B = model_objects["importance_B"]
